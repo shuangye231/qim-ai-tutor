@@ -34,6 +34,7 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 mkdir -p data static .hf-cache
+$SUDO chown -R 1000:1000 data static .hf-cache
 DOCKER_GID="$(stat -c '%g' /var/run/docker.sock)"
 if [[ ! -f .env ]]; then
   read -r -s -p "Set the administrator key (leave blank to generate one): " ADMIN_KEY; echo
