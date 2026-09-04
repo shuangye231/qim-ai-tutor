@@ -15,8 +15,8 @@ venv/
 chroma_db/
 
 # 上传文件
-uploads/
-!uploads/.gitkeep
+/uploads/
+!/uploads/.gitkeep
 
 # IDE
 .vscode/
@@ -31,9 +31,9 @@ Thumbs.db
 api_keys.txt
 
 # 运行数据与模型缓存
-data/
-app.db
-users.db
+/data/
+/app.db
+/users.db
 .hf-cache/
 
 # Docker 运行时生成的可变静态文件
