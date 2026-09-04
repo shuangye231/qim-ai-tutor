@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 学习导师 - 管理后台</title>
+    <style>
+        * { box-sizing:border-box; } body { margin:0; background:#f6f7f9; color:#1d2129; font:14px "Microsoft YaHei UI","Microsoft YaHei",Arial,sans-serif; }
+        main { max-width:1080px; margin:0 auto; padding:32px 20px; } header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+        h1 { margin:0; font-size:24px; } h2 { font-size:16px; margin:0 0 14px; } .toolbar { display:flex; gap:8px; }
+        input, button { font:inherit; border-radius:6px; } input { border:1px solid #d9dfe8; padding:9px 12px; min-width:260px; }
+        button { border:1px solid #d9dfe8; background:#fff; padding:9px 14px; cursor:pointer; } button:hover { background:#f2f3f5; }
+        .primary { background:#3370ff; border-color:#3370ff; color:#fff; } .primary:hover { background:#2864ec; }
+        .error { color:#f53f3f; min-height:20px; margin:8px 0; } .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px; }
+        .stat, .panel { background:#fff; border:1px solid #e5e6eb; border-radius:8px; padding:18px; } .stat strong { display:block; font-size:26px; margin-top:8px; color:#165dff; }
+        .panel { margin-bottom:18px; } .key-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #f2f3f5; } .key-row:last-child { border-bottom:0; }
+        .muted { color:#86909c; font-size:12px; } .danger { color:#f53f3f; border-color:#f53f3f; }
+        @media(max-width:640px){ .stats{grid-template-columns:1fr}.toolbar{flex-wrap:wrap} input{min-width:0;width:100%} header{align-items:flex-start;gap:12px;flex-direction:column} }
+    </style>
+</head>
+<body><main>
+    <header><h1>管理后台</h1><div class="toolbar"><input id="adminKey" type="password" placeholder="输入 ADMIN_API_KEY"><button class="primary" onclick="loadOverview()">加载数据</button></div></header>
+    <div id="error" class="error"></div>
+    <section class="stats"><div class="stat">用户数<strong id="users">-</strong></div><div class="stat">提问次数<strong id="queries">-</strong></div><div class="stat">Token 用量<strong id="tokens">-</strong></div></section>
+    <section class="panel"><h2>创建 API Key</h2><div class="toolbar"><input id="label" placeholder="用途，例如：个人网站"><input id="owner" placeholder="归属人"><button class="primary" onclick="createKey()">创建密钥</button></div><p class="muted">新密钥只显示一次，请立即复制保存。</p><div id="newKey"></div></section>
+    <section class="panel"><h2>API Key 列表</h2><div id="keys" class="muted">请先加载数据</div></section>
+</main><script>
+const keyInput = document.getElementById('adminKey');
+function headers(){ return {'X-Admin-Key': keyInput.value}; }
+function showError(message){ document.getElementById('error').textContent = message || ''; }
+async function loadOverview(){
+    try { const res = await fetch('/api/admin/overview', {headers:headers()}); const data = await res.json(); if(!res.ok) throw new Error(data.detail || '加载失败');
+        users.textContent=data.users; queries.textContent=data.queries; tokens.textContent=data.tokens; keys.innerHTML='';
+        if(!data.api_keys.length){ keys.textContent='暂无 API Key'; return; }
+        data.api_keys.forEach(item=>{ const row=document.createElement('div'); row.className='key-row'; row.innerHTML=`<span><strong>${item.prefix}</strong> <span class="muted">${item.label} · ${item.owner}</span></span><button class="danger" onclick="revokeKey('${item.prefix}')">撤销</button>`; keys.appendChild(row); });
+        showError('');
+    } catch(error){ showError(error.message); }
+}
+async function createKey(){
+    try { const res=await fetch('/api/admin/keys',{method:'POST',headers:{...headers(),'Content-Type':'application/json'},body:JSON.stringify({label:label.value,owner:owner.value})}); const data=await res.json(); if(!res.ok) throw new Error(data.detail||'创建失败'); newKey.innerHTML=`<p><strong>${data.api_key}</strong></p>`; await loadOverview(); } catch(error){showError(error.message);}
+}
+async function revokeKey(prefix){ if(!confirm('确定撤销这个 API Key？')) return; const res=await fetch('/api/admin/keys/'+encodeURIComponent(prefix),{method:'DELETE',headers:headers()}); const data=await res.json(); if(!res.ok) showError(data.detail||'撤销失败'); else loadOverview(); }
+</script></body></html>

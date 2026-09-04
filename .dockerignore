@@ -1,0 +1,15 @@
+.git
+.impeccable
+__pycache__
+*.py[cod]
+.env
+data
+uploads
+workspaces
+feedback
+.hf-cache
+web/node_modules
+web/dist
+app.db
+users.db
+app.log

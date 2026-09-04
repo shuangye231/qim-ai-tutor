@@ -1,0 +1,26 @@
+services:
+  tutor:
+    build: .
+    ports:
+      - "8899:8899"
+    environment:
+      DATA_DIR: /data
+      HF_HOME: /model-cache
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://huggingface.co}
+      PORT: 8899
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      PRO_API_KEY: ${PRO_API_KEY:-}
+      CCODE_API_KEY: ${CCODE_API_KEY:-}
+      CLOUD_BASE_URL: ${CLOUD_BASE_URL:-https://api.ccode.vip/v1}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}
+      HF_OFFLINE: ${HF_OFFLINE:-0}
+      FREE_DAILY_QUESTIONS: ${FREE_DAILY_QUESTIONS:-5}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+    group_add:
+      - "${DOCKER_GID:-999}"
+    volumes:
+      - ./data:/data
+      - ./.hf-cache:/model-cache
+      - ./static:/app/static
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

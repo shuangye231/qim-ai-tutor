@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>全能AI导师 - AI 学习助手</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <span class="logo">🎓</span>
+        <span>全能AI导师</span>
+    </div>
+    <div class="navbar-stats">
+        <span>📚 内置知识库 · 可上传补充</span>
+        <span style="margin-left:16px;">|</span>
+        <span style="margin-left:12px; cursor:pointer;" onclick="showStats()" title="查看统计">📊</span>
+        <select id="headerModelSelect" aria-hidden="true" tabindex="-1" style="display:none;">
+            <option value="flash">⚡ Flash（本地 Ollama）</option>
+            <option value="pro">🔑 Pro（我的 API）</option>
+        </select>
+        <a class="feedback-nav-btn version-switch" href="/" title="切换到新版界面">新版</a>
+        <button class="feedback-nav-btn" type="button" onclick="toggleFeedback()" title="提交反馈">反馈</button>
+        <button class="login-btn" id="loginBtn" onclick="showLogin()">👤 登录</button>
+        <button class="user-info" id="userInfo" onclick="toggleProfile()" style="display:none;"></button>
+        <div class="profile-menu" id="profileMenu">
+            <div class="profile-heading"><span id="profileAvatar">👤</span><strong id="profileName"></strong></div>
+            <button onclick="showPasswordModal()">🔑 修改密码</button>
+            <button onclick="showLearningManager()">📚 学习管理</button>
+            <button onclick="showThemePicker()">🎨 页面主题</button>
+            <button onclick="showAvatarPicker()">🙂 更换头像</button>
+            <button onclick="showAiAvatarPicker()">🤖 AI 头像</button>
+            <button class="profile-logout" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+    <!-- 左侧面板 -->
+    <aside class="sidebar">
+        <button class="new-chat-btn" onclick="newChat()">＋ 新对话</button>
+
+        <div class="sidebar-section">
+            <h2>💬 历史会话</h2>
+            <div class="session-list" id="sessionList"></div>
+        </div>
+
+        <div class="sidebar-section">
+            <h2>📚 内置知识库</h2>
+            <div class="builtin-info">
+                <div class="title">🧠 专业AI知识引擎 v4.0</div>
+                <div class="item">📦 内置 <strong>1,280,000+</strong> 条AI专业知识</div>
+                <div class="item">⚡ 毫秒级语义检索 · FAISS 向量引擎</div>
+                <div class="item">🎯 覆盖 LLM / RAG / Agent / 前沿动态</div>
+                <div class="item" style="color:#667eea; font-size:12px; margin-top:6px;">✅ 已自动加载 · 无需上传即可提问</div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h2>📤 补充知识库</h2>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="icon">📤</div>
+                <p>上传 .md 笔记补充知识</p>
+                <p class="hint">可选，不传也能用内置知识库</p>
+                <input type="file" id="fileInput" accept=".md" style="display:none">
+            </div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div class="sidebar-section">
+            <h2>💡 试试问这些</h2>
+            <ul style="font-size:13px; color:#667085; line-height:2.2; padding-left:20px;">
+                <li>什么是 LLM？</li>
+                <li>Token 是什么？</li>
+                <li>RAG 和 Agent 的区别</li>
+                <li>LangChain 有什么用？</li>
+                <li>怎么入门 AI 开发？</li>
+            </ul>
+        </div>
+        <div class="sidebar-section">
+            <h2>💡 提示词模板</h2>
+            <div class="prompt-templates">
+                <button onclick="askTemplate('请用通俗的语言解释这个概念，并举一个实际例子')">解释概念</button>
+                <button onclick="askTemplate('请帮我总结当前学习内容，并列出三个重点')">总结重点</button>
+                <button onclick="askTemplate('请根据当前内容给我出三道练习题，并在最后给出答案')">生成练习题</button>
+                <button onclick="askTemplate('请指出我还没有掌握的知识点，并给出下一步学习建议')">学习建议</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 右侧聊天区 -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <h2>💬 问答</h2>
+            <div class="actions">
+                <button class="btn" onclick="exportMarkdown()">导出 MD</button>
+                <button class="btn" onclick="exportPdf()">导出 PDF</button>
+                <button class="btn" onclick="shareCurrentChat()">分享对话</button>
+                <button class="btn" onclick="shareLearningResult('card')">学习卡片</button>
+                <button class="btn" onclick="toggleDailyPanel()">学习概览</button>
+                <button class="btn" onclick="newChat()">＋ 新对话</button>
+                <button class="btn btn-danger" onclick="clearHistory()">🗑️ 清除当前</button>
+            </div>
+        </div>
+
+        <div class="messages" id="messages" style="flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:16px;">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">🎓</div>
+                <h3>全能AI导师</h3>
+                <p>内置 AI 学习知识库，开箱即用。<br>问我任何 AI 相关问题，我会结合知识库回答你。<br><br>也可以上传你的 .md 笔记来补充知识库。</p>
+            </div>
+        </div>
+
+        <div class="stats-bar" id="statsBar" style="padding:6px 24px; border-top:1px solid #eaecf0; font-size:12px; color:#98a2b3; display:flex; justify-content:space-between; background:#fafbfc;">
+            <span>💬 本次：<span id="sessionCount">0</span> 次 · <span id="sessionTokens">0</span> Token</span>
+            <span>🌐 全局：<span id="globalCount">0</span> 次 · <span id="globalTokens">0</span> Token</span>
+            <span>🤖 <span id="sessionModel">Free（本地推理）</span></span>
+        </div>
+
+        <div class="input-area">
+            <div class="composer-mode" role="group" aria-label="对话模式"><button id="chatModeBtn" class="active" type="button" onclick="setChatMode('chat')">聊天</button><button id="taskModeBtn" type="button" onclick="setChatMode('task')">任务</button></div>
+            <button class="task-folder-chip" id="taskFolderChip" type="button" onclick="showWorkspace()" title="选择任务文件夹"></button>
+            <button class="composer-workspace-btn" id="workspaceComposerBtn" type="button" onclick="showWorkspace()" title="打开任务工作区" aria-label="打开任务工作区"><span class="folder-icon" aria-hidden="true"></span></button>
+            <div class="model-picker">
+                <button class="model-trigger mode-flash" id="modelTrigger" onclick="toggleModelMenu()"><span class="model-dot"></span><span class="model-label"><b>Free</b><small>本地推理</small></span></button>
+                <div class="model-menu" id="modelMenu">
+                    <button onclick="selectModel('flash')"><strong>Free</strong><small>本地推理</small></button>
+                    <button onclick="selectModel('glm')"><strong>Flash</strong><small>高速云端</small></button>
+                    <button onclick="selectModel('pro')"><strong>Pro</strong><small>增强云端</small></button>
+                </div>
+                <select id="modelSelect" class="input-model-select" onchange="onModelChange(this)" aria-label="选择模型" tabindex="-1" aria-hidden="true">
+                    <option value="flash">Free</option><option value="glm">Flash</option><option value="pro">Pro</option>
+                </select>
+            </div>
+            <div class="tutor-picker">
+                <button class="tutor-trigger" id="tutorTrigger" type="button" onclick="toggleTutorMenu()" aria-haspopup="true"><span id="tutorLabel">通俗讲解</span></button>
+                <div class="tutor-menu" id="tutorMenu">
+                    <button type="button" onclick="selectTutorMode('explain')">通俗讲解<small>结论、例子、下一步</small></button>
+                    <button type="button" onclick="selectTutorMode('socratic')">苏格拉底追问<small>用问题引导思考</small></button>
+                    <button type="button" onclick="selectTutorMode('interview')">面试官<small>追问并给反馈</small></button>
+                    <button type="button" onclick="selectTutorMode('review')">代码审查<small>问题、原因、改法</small></button>
+                    <button type="button" onclick="selectTutorMode('quiz')">出题老师<small>一次一题，作答后点评</small></button>
+                </div>
+            </div>
+            <textarea id="queryInput" rows="1" placeholder="输入问题..." onkeydown="handleKeyDown(event)"></textarea>
+            <button class="voice-input-btn" id="voiceInputBtn" type="button" onclick="toggleVoiceInput()" title="语音输入" aria-label="语音输入"></button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+        <aside class="daily-panel" id="dailyPanel" hidden aria-label="每日学习概览">
+            <div class="daily-panel-head"><strong>今日学习</strong><button type="button" class="daily-close" onclick="toggleDailyPanel()" aria-label="关闭学习概览"></button></div>
+            <div id="dailyPanelContent" class="daily-panel-content"></div>
+        </aside>
+        <button class="learning-orb" id="learningOrb" type="button" onclick="openLearning('plan')" aria-label="打开学习助手" title="学习助手">✦</button>
+        <aside class="learning-drawer" id="learningDrawer" aria-hidden="true">
+            <div class="learning-drawer-header" id="learningDragHandle">
+                <div><strong>学习助手</strong><span id="learningSubtitle">把对话变成进度</span></div>
+                <button class="icon-btn" type="button" onclick="closeLearning()" title="关闭学习助手" aria-label="关闭学习助手">×</button>
+            </div>
+            <div class="learning-tabs" role="tablist">
+                <button type="button" class="active" data-learning-tab="plan" onclick="showLearningTab('plan')">路线</button>
+                <button type="button" data-learning-tab="notes" onclick="showLearningTab('notes')">笔记</button>
+                <button type="button" data-learning-tab="quiz" onclick="showLearningTab('quiz')">练习</button>
+                <button type="button" data-learning-tab="mistakes" onclick="showLearningTab('mistakes')">错题</button>
+            </div>
+            <div class="learning-content" id="learningContent"></div>
+        </aside>
+    </div>
+</div>
+
+{{ MODALS }}
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>

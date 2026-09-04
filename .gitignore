@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.map
+*.egg-info/
+dist/
+build/
+
+# 虚拟环境
+venv/
+.env
+.env.local
+
+# 向量数据库文件（Chroma 持久化）
+chroma_db/
+
+# 上传文件
+uploads/
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# API Key（如果误存）
+*.key
+api_keys.txt
+
+# 运行数据与模型缓存
+data/
+app.db
+users.db
+.hf-cache/
+
+# Docker 运行时生成的可变静态文件
+static/avatars/
+static/class-emojis/
+static/class-media/
+static/assignment-submissions/

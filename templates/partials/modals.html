@@ -1,0 +1,82 @@
+<!-- 反馈弹窗 -->
+<div class="feedback-modal" id="feedbackModal">
+    <div class="header">反馈建议</div>
+    <div class="body">
+        <textarea id="feedbackInput" placeholder="告诉我们你的想法...\n遇到问题？有建议？想说啥都行！"></textarea>
+    </div>
+    <div class="footer">
+        <button class="btn-cancel" onclick="toggleFeedback()">取消</button>
+        <button class="btn-submit" onclick="submitFeedback()">提交反馈</button>
+    </div>
+</div>
+
+<!-- 统计弹窗 -->
+<div class="modal-overlay" id="statsModal">
+    <div class="modal-box" style="width:420px;">
+        <h2>使用统计</h2>
+        <div style="margin:16px 0;">
+            <div style="padding:12px; background:#f8f9ff; border-radius:10px; margin-bottom:12px;">
+                <div style="font-size:13px; color:#667085; margin-bottom:4px;">本次会话</div>
+                <div style="font-size:18px; font-weight:700; color:#2563eb;"><span id="modalSessionCount">0</span> 次提问 · <span id="modalSessionTokens">0</span> Token</div>
+            </div>
+            <div style="padding:12px; background:#f0f4ff; border-radius:10px; margin-bottom:12px; display:none;" id="modalUserStats">
+                <div style="font-size:13px; color:#667085; margin-bottom:4px;">今日统计</div>
+                <div style="font-size:18px; font-weight:700; color:#2563eb;"><span id="modalTodayQueries">0</span> 次提问 · <span id="modalTodayTokens">0</span> Token</div>
+                <div style="font-size:13px; color:#98a2b3; margin-top:6px;">总计：<span id="modalTotalQueries">0</span> 次 · <span id="modalTotalTokens">0</span> Token</div>
+            </div>
+            <div style="padding:12px; background:#f7f8fa; border-radius:10px;">
+                <div style="font-size:13px; color:#667085; margin-bottom:4px;">全局统计</div>
+                <div style="font-size:14px; font-weight:600; color:#18212c;"><span id="modalGlobalUsers">0</span> 位用户 · <span id="modalGlobalQueries">0</span> 次提问</div>
+            </div>
+        </div>
+        <button class="btn-primary" onclick="document.getElementById('statsModal').classList.remove('show')">关闭</button>
+    </div>
+</div>
+<div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+        <h2 id="loginTitle">登录</h2>
+        <div class="error" id="loginError"></div>
+        <input type="text" id="loginUsername" placeholder="用户名" autocomplete="off">
+        <input type="password" id="loginPassword" placeholder="密码">
+        <button class="btn-primary" id="loginSubmitBtn" onclick="submitLogin()">登录</button>
+        <div class="link" id="loginSwitch" onclick="switchLoginMode()">没有账号？点此注册</div>
+    </div>
+</div>
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal-box"><h2>修改密码</h2><div class="error" id="passwordError"></div>
+        <input type="password" id="oldPassword" placeholder="原密码"><input type="password" id="newPassword" placeholder="新密码（至少 4 位）">
+        <button class="btn-primary" onclick="changePassword()">保存新密码</button>
+        <div class="link" onclick="closeProfileModal('passwordModal')">取消</div>
+    </div>
+</div>
+<div class="modal-overlay" id="learningManageModal">
+    <div class="modal-box learning-manage-box">
+        <div class="learning-manage-head"><h2>学习管理</h2><button class="icon-btn modal-close" type="button" onclick="closeProfileModal('learningManageModal')" aria-label="关闭学习管理"></button></div>
+        <div class="learning-manage-content" id="learningManageContent"></div>
+    </div>
+</div>
+<div class="confirm-layer" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+    <div class="confirm-panel"><div class="confirm-mark"></div><h2 id="confirmTitle">确认操作</h2><p id="confirmMessage"></p><div class="confirm-actions"><button type="button" class="confirm-cancel" onclick="closeConfirm()">取消</button><button type="button" class="confirm-submit" id="confirmSubmit" onclick="runConfirmAction()">确认</button></div></div>
+</div>
+<div class="modal-overlay" id="workspaceModal">
+    <div class="modal-box workspace-box">
+        <div class="workspace-head"><h2>文档工作区</h2><div class="workspace-head-actions"><button type="button" onclick="exportCurrentSessionToWorkspace()">保存当前会话</button><button class="workspace-vscode-btn" type="button" onclick="openWorkspaceInVSCode()">在 VS Code 中打开</button><button class="icon-btn" type="button" onclick="closeProfileModal('workspaceModal')" aria-label="关闭文档工作区">×</button></div></div>
+        <div class="workspace-body">
+            <nav class="workspace-activity" aria-label="资源管理器"><span class="workspace-activity-icon" title="资源管理器"></span></nav>
+            <aside class="workspace-sidebar"><div class="workspace-explorer-head"><strong>资源管理器</strong><div class="workspace-mini-actions"><button class="workspace-mini-btn" type="button" onclick="createWorkspaceFolder()" title="新建文件夹">新建</button><button class="workspace-mini-btn" type="button" onclick="document.getElementById('workspaceFileInput').click()" title="上传文件">上传</button><button class="workspace-mini-btn" type="button" onclick="openExistingWorkspaceFolder()" title="打开已有文件夹">打开</button></div></div><input id="workspaceFileInput" type="file" accept=".md,.txt,text/markdown,text/plain" hidden><button class="workspace-root" type="button" onclick="selectWorkspaceFolder('')"><span class="workspace-root-icon"></span><b id="workspaceRootLabel">我的学习资料</b></button><div class="workspace-files" id="workspaceFiles"></div><div class="workspace-folder-status" id="workspaceFolderStatus">请选择一个任务文件夹</div></aside>
+            <section class="workspace-main"><div class="workspace-toolbar"><span class="workspace-file-title" id="workspaceFileTitle">选择一个文档</span><button type="button" onclick="toggleWorkspacePreview()">预览</button><button type="button" onclick="saveWorkspaceFile()">保存</button></div><textarea class="workspace-editor" id="workspaceEditor" placeholder="上传或选择一个 Markdown / 文本文件后，可在这里修改。"></textarea><article class="workspace-preview note-reader" id="workspacePreview" hidden></article><div class="workspace-ai"><input id="workspaceInstruction" placeholder="例如：整理成复习笔记，保留关键概念和例子"><button id="workspaceGenerateBtn" type="button" onclick="generateWorkspaceDocument()">AI 生成文档</button></div></section>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="themeModal">
+    <div class="modal-box"><h2>页面主题</h2>
+        <button class="theme-choice" onclick="setTheme('light')">☀️ 明亮</button><button class="theme-choice" onclick="setTheme('dark')">🌙 深色</button><button class="theme-choice" onclick="setTheme('system')">⚙️ 跟随系统</button>
+        <div class="link" onclick="closeProfileModal('themeModal')">完成</div>
+    </div>
+</div>
+<div class="modal-overlay" id="avatarModal">
+    <div class="modal-box"><h2>选择你的头像</h2><div class="avatar-grid" id="avatarGrid"></div><div class="link" onclick="closeProfileModal('avatarModal')">完成</div></div>
+</div>
+<div class="modal-overlay" id="aiAvatarModal">
+    <div class="modal-box"><h2>选择 AI 头像</h2><div class="avatar-grid" id="aiAvatarGrid"></div><div class="link" onclick="closeProfileModal('aiAvatarModal')">完成</div></div>
+</div>
